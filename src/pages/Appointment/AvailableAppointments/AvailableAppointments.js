@@ -1,6 +1,9 @@
 import { Container, Grid } from "@mui/material";
-import React from "react";
+import React, { useState } from "react";
 import Booking from "../Booking/Booking";
+import Button from "@mui/material/Button";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 
 const bookings = [
   {
@@ -40,15 +43,32 @@ const bookings = [
     space: 10,
   },
 ];
+
 const AvailableAppointments = ({ date }) => {
+  const [toastOpen, setToastOpen] = useState();
+
+  const handleClose = (event, reason) => {
+    setToastOpen(false);
+  };
   return (
     <Container>
       <h2>Available appointment {date.toDateString()}</h2>
       <Grid container spacing={2}>
         {bookings.map((booking) => (
-          <Booking key={booking.id} booking={booking}></Booking>
+          <Booking
+            key={booking.id}
+            booking={booking}
+            date={date}
+            setToastOpen={setToastOpen}
+          ></Booking>
         ))}
       </Grid>
+
+      <Snackbar open={toastOpen} autoHideDuration={6000} onClose={handleClose}>
+        <Alert onClose={handleClose} severity="success" sx={{ width: "100%" }}>
+          Your appointment booked successfully!
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

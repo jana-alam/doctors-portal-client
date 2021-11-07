@@ -6,9 +6,14 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+import useAuth from "../../../hooks/useAuth";
 
 const Navigation = () => {
+  const { user, logout } = useAuth();
+  const handleLogout = () => {
+    logout();
+  };
   return (
     <div>
       <Box sx={{ flexGrow: 1 }}>
@@ -26,10 +31,29 @@ const Navigation = () => {
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               Doctors
             </Typography>
-            <Link to="/appointment">
-              <Button color="inherit">Appointment</Button>
-            </Link>
-            <Button color="inherit">Login</Button>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              {user?.displayName}
+            </Typography>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              {user?.email}
+            </Typography>
+            <NavLink to="/appointment" style={{ textDecoration: "none" }}>
+              <Button sx={{ color: "white" }}>Appointment</Button>
+            </NavLink>
+            {user?.email ? (
+              <Button
+                onClick={handleLogout}
+                sx={{ color: "white", textUnderline: "none" }}
+              >
+                Logout
+              </Button>
+            ) : (
+              <NavLink to="/login" style={{ textDecoration: "none" }}>
+                <Button sx={{ color: "white", textUnderline: "none" }}>
+                  Login
+                </Button>
+              </NavLink>
+            )}
           </Toolbar>
         </AppBar>
       </Box>
