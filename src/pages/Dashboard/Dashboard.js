@@ -1,6 +1,4 @@
 import React from "react";
-
-import PropTypes from "prop-types";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -16,14 +14,20 @@ import MailIcon from "@mui/icons-material/Mail";
 import MenuIcon from "@mui/icons-material/Menu";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import { Grid } from "@mui/material";
-import Calendar from "../SharedComponents/Calendar/Calendar";
+import { useRouteMatch } from "react-router";
+import { Switch, Route, Link } from "react-router-dom";
+import DashBoardHome from "./DashBoardHome/DashBoardHome";
+import Appointments from "./Appointments/Appointments";
+import CreateAdmin from "./CreateAdmin/CreateAdmin";
+import useAuth from "../../hooks/useAuth";
+import AdminRoute from "../../AdminRoute/AdminRoute";
 
 const drawerWidth = 240;
 
 const Dashboard = (props) => {
+  const { admin } = useAuth();
+  let { path, url } = useRouteMatch();
   const { window } = props;
-  const [date, setDate] = React.useState(new Date());
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
   const handleDrawerToggle = () => {
@@ -34,6 +38,21 @@ const Dashboard = (props) => {
     <div>
       <Toolbar />
       <Divider />
+      <List>
+        <Link to={`${url}/appointments`}>
+          <ListItem button>Appointments</ListItem>
+        </Link>
+        {admin && (
+          <Box>
+            <Link to={`${url}/add-doctors`}>
+              <ListItem button>Add Doctors</ListItem>
+            </Link>
+            <Link to={`${url}/create-admin`}>
+              <ListItem button>Create Admin</ListItem>
+            </Link>
+          </Box>
+        )}
+      </List>
       <List>
         {["Inbox", "Starred", "Send email", "Drafts"].map((text, index) => (
           <ListItem button key={text}>
@@ -119,17 +138,23 @@ const Dashboard = (props) => {
         sx={{
           flexGrow: 1,
           p: 3,
+          mt: 8,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
         }}
       >
-        <Grid container spacing={2} sx={{ mt: 6 }}>
-          <Grid item md={5}>
-            <Calendar date={date} setDate={setDate} />
-          </Grid>
-          <Grid item md={7}>
-            Date : {date.toDateString()}
-          </Grid>
-        </Grid>
+        <Toolbar>
+          <Switch>
+            <Route exact path={path}>
+              <DashBoardHome></DashBoardHome>
+            </Route>
+            <Route path={`${path}/appointments`}>
+              <Appointments></Appointments>
+            </Route>
+            <AdminRoute path={`${path}/create-admin`}>
+              <CreateAdmin></CreateAdmin>
+            </AdminRoute>
+          </Switch>
+        </Toolbar>
       </Box>
     </Box>
   );

@@ -8,6 +8,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   updateProfile,
+  getIdToken,
 } from "firebase/auth";
 import { Password } from "@mui/icons-material";
 import initializationFireBase from "../pages/Home/Login/Firebase/firebase.init.";
@@ -16,6 +17,8 @@ initializationFireBase();
 const useFirebase = () => {
   const [user, setUser] = useState({});
   const [loading, setLoading] = useState(true);
+  const [admin, setAdmin] = useState(false);
+  const [token, setToken] = useState("");
   const auth = getAuth();
 
   // onAuth state change
@@ -40,10 +43,9 @@ const useFirebase = () => {
             // An error occurred
             // ...
           });
-        console.log("setting user in state");
+        savedUser(name, email, "POST");
         const directedUrl = location?.state?.from || "/";
         history.replace(directedUrl);
-        console.log("From create user");
       })
       .catch((error) => {
         const errorCode = error.code;
@@ -55,11 +57,10 @@ const useFirebase = () => {
   useEffect(() => {
     console.log("initial rendering");
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log("from auth observer");
       if (user) {
         setUser(user);
         setLoading(false);
-        console.log("if user found inside observer");
+        getIdToken(user).then((idToken) => setToken(idToken));
       } else {
         setUser({});
         setLoading(false);
@@ -68,7 +69,11 @@ const useFirebase = () => {
     });
     return () => unsubscribe;
   }, []);
-
+  useEffect(() => {
+    fetch(`http://localhost:5000/user/${user.email}`)
+      .then((res) => res.json())
+      .then((data) => setAdmin(data.admin));
+  }, [user.email]);
   const loginUser = (email, password) => {
     setLoading(true);
     signInWithEmailAndPassword(auth, email, Password)
@@ -87,19 +92,33 @@ const useFirebase = () => {
   const googleSignIn = (location, history) => {
     setLoading(true);
     const googleProvider = new GoogleAuthProvider();
-    console.log("Before from google");
+
     signInWithPopup(auth, googleProvider)
       .then((result) => {
-        console.log("from google");
+        savedUser(result.user.displayName, result.user.email, "PUT");
         const directedUrl = location?.state?.from || "/home";
         history.replace(directedUrl);
-        console.log(directedUrl);
       })
       .catch((error) => {
         console.log(error.message);
       })
       .finally(() => {
         setLoading(false);
+      });
+  };
+
+  const savedUser = (name, email, method) => {
+    const userInfo = { name, email };
+    fetch("http://localhost:5000/user", {
+      method: method,
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(userInfo),
+    })
+      .then((res) => res.json())
+      .then((result) => {
+        console.log(result);
       });
   };
 
@@ -115,7 +134,16 @@ const useFirebase = () => {
       .finally(() => setLoading(false));
   };
 
-  return { user, loading, registerUser, loginUser, googleSignIn, logout };
+  return {
+    user,
+    loading,
+    registerUser,
+    loginUser,
+    googleSignIn,
+    logout,
+    admin,
+    token,
+  };
 };
 
 export default useFirebase;
